@@ -1,6 +1,7 @@
 """CSI2108 Semester 1 2018: Assessable Workshop - Symmetric Encryption."""
 # Main source for code:
 # https://cryptography.io/en/latest/hazmat/primitives/symmetric-encryption/
+# https://cryptography.io/en/latest/hazmat/primitives/padding/
 
 # Import libraries
 import os
@@ -14,6 +15,8 @@ key = os.urandom(32)
 iv = os.urandom(16)
 backend = default_backend()
 settings = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
+padder = padding.PKCS7(256).padder()
+unpadder = padding.PKCS7(256).unpadder()
 encryptor = settings.encryptor()
 decryptor = settings.decryptor()
 
@@ -22,19 +25,19 @@ message = "a secret message"
 print(message)
 # Convert message from String abstraction to literal bytes
 message = message.encode()
-
-# https://cryptography.io/en/latest/hazmat/primitives/padding/
-padder = padding.PKCS7(256).padder()
+# Pad the messaage to 256 bits
+padded = padder.update(message)
+padded += padder.finalize()
+print(padded)
 
 # Actually do the encryption
-ciphertext = encryptor.update(message) + encryptor.finalize()
-print(ciphertext)
+encrypted = encryptor.update(padded) + encryptor.finalize()
+print(encrypted)
 
 # Do the decryption
-plaintext = decryptor.update(ciphertext) + decryptor.finalize()
-plaintext = plaintext.decode()
+decrypted = decryptor.update(encrypted) + decryptor.finalize()
+print(decrypted)
+unpadded = unpadder.update(decrypted)
+unpadded += unpadder.finalize()
+plaintext = unpadded.decode()
 print(plaintext)
-
-# Input testing
-input = input("Please enter something:")
-print(input)
