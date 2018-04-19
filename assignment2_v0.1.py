@@ -15,8 +15,8 @@ key = os.urandom(32)
 iv = os.urandom(16)
 backend = default_backend()
 settings = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
-padder = padding.PKCS7(256).padder()
-unpadder = padding.PKCS7(256).unpadder()
+padder = padding.PKCS7(128).padder()
+unpadder = padding.PKCS7(128).unpadder()
 encryptor = settings.encryptor()
 decryptor = settings.decryptor()
 
@@ -37,6 +37,7 @@ print(encrypted)
 # Do the decryption
 decrypted = decryptor.update(encrypted) + decryptor.finalize()
 print(decrypted)
+
 unpadded = unpadder.update(decrypted)
 unpadded += unpadder.finalize()
 plaintext = unpadded.decode()
