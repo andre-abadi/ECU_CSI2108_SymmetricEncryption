@@ -1,7 +1,8 @@
 # CSI2108 Semester 1 2018
 # Assessable Workshop - Symmetric Encryption
-
+# Main source for code:
 # https://cryptography.io/en/latest/hazmat/primitives/symmetric-encryption/
+
 # Setup
 import os
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -37,3 +38,7 @@ print(ciphertext)
 plaintext = decryptor.update(ciphertext) + decryptor.finalize()
 plaintext = plaintext.decode()
 print(plaintext)
+
+# Input testing
+input = input("Please enter something:")
+print(input)
