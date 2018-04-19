@@ -5,7 +5,6 @@
 
 # Import libraries
 import os
-
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -30,7 +29,7 @@ padded = padder.update(message)
 padded += padder.finalize()
 print(padded)
 
-# Actually do the encryption
+# Do the encryption
 encrypted = encryptor.update(padded) + encryptor.finalize()
 print(encrypted)
 
@@ -38,6 +37,7 @@ print(encrypted)
 decrypted = decryptor.update(encrypted) + decryptor.finalize()
 print(decrypted)
 
+# Unpad the decrypted message
 unpadded = unpadder.update(decrypted)
 unpadded += unpadder.finalize()
 plaintext = unpadded.decode()
