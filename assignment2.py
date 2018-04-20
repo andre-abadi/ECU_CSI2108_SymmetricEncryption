@@ -43,4 +43,13 @@ unpadded += unpadder.finalize()
 plaintext = unpadded.decode()
 print(plaintext)
 
-print("test")
+print("CSI2108 Symmetric Encryption Tool")
+passphrase = input("Please enter passphrase: ")
+print("Your filename is: " + passphrase)
+# Convert passphrase from String to bytes data type
+filename = input("Please enter a filename to be encrypted: ")
+filename = "input.txt"
+print("The filename to be encrypted is: " + filename)
+
+file = open(filename, mode='r')
+file.write(passphrase)
