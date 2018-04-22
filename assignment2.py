@@ -14,9 +14,10 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 # Preamble
 print("CSI2108 Symmetric Encryption Tool\n")
+isPadded = False
 
 
-def _keyGen(passphrase):
+def _createKey(passphrase):
     if len(passphrase) == 0:
         passphrase = "CSI2108"
         print("No passphrase detected, defaulting to: " + passphrase)
@@ -24,69 +25,45 @@ def _keyGen(passphrase):
     return key
 
 
-# Input passphrase
-passphrase = input("Please enter passphrase: ")
-key = _keyGen(passphrase)
-
-
-def _readFile(filename):
-    # Input filename
-
+def _createMessage(filename):
     if len(filename) == 0:
         filename = "input.txt"
         print("No filename detecting, defaulting to: " + filename)
-    print("The filename to be encrypted is: " + filename)
     # Open the file for reading
     file = open(filename, mode='r')
     message = file.read()
-    print("The file was read and contained: " + message)
+    message = message.encode()
     return message
 
 
+# Input passphrase
+passphrase = input("Please enter passphrase: ")
+key = _createKey(passphrase)
+# Input filename
 filename = input("Please enter a filename to be encrypted: ")
-message = _readFile(filename)
+message = _createMessage(filename)
+# Generate Initialisation Vector (IV)
+iv = os.urandom(16)
+print("The Initialisation Vector (IV) is:  " + b64encode(iv).decode())
 
-
-# Convert message to bytes
-message = message.encode()
-print("The message as bytes is: " + b64encode(message).decode())
-print("Message is {} bits long".format(sys.getsizeof(message) * 8))
-
-
-# Pad message
-isPadded = False
+# Encryption
 if (sys.getsizeof(message)*8) % 128 != 0:
-    print("Padding")
     padder = padding.PKCS7(128).padder()
     padded = padder.update(message)
     padded += padder.finalize()
     message = padded
     isPadded = True
-    print("The padded message is: " + b64encode(message).decode())
-    print("Padded message is {} bits long".format(sys.getsizeof(message) * 8))
-
-
-# Generate Initialisation Vector (IV)
-iv = os.urandom(16)
-print("The Initialisation Vector (IV) is:  " + b64encode(iv).decode())
-
-# Initialise backend
 backend = default_backend()
-# Initialise settings for the cipher
 settings = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
-# message = "a secret message"
-# message = message.encode()
-# Create instance of encryptor and decryptor objects
 encryptor = settings.encryptor()
-decryptor = settings.decryptor()
-print(message)
-# Do the encryption
 encrypted = encryptor.update(message) + encryptor.finalize()
-print(encrypted)
-# Do the decryption
-decrypted = decryptor.update(encrypted) + decryptor.finalize()
-print(decrypted)
 
+
+# Decryption
+backend = default_backend()
+settings = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
+decryptor = settings.decryptor()
+decrypted = decryptor.update(encrypted) + decryptor.finalize()
 # Unpad the decrypted message
 if isPadded is True:
     unpadder = padding.PKCS7(128).unpadder()
