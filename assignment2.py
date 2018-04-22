@@ -24,7 +24,6 @@ def _createMessage(filename):
     if len(filename) == 0:
         filename = "input.txt"
         print("No filename detecting, defaulting to: " + filename)
-    # Open the file for reading
     file = open(filename, mode='r')
     message = file.read()
     message = message.encode()
@@ -35,12 +34,10 @@ def _encrypt(message):
     padder = padding.PKCS7(128).padder()
     padded = padder.update(message)
     padded += padder.finalize()
-    message = padded
     backend = default_backend()
     settings = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
     encryptor = settings.encryptor()
-    encrypted = encryptor.update(message) + encryptor.finalize()
-    print(encrypted)
+    encrypted = encryptor.update(padded) + encryptor.finalize()
     return encrypted
 
 
@@ -54,7 +51,6 @@ def _decrypt(ciphertext):
     unpadded = unpadder.update(decrypted)
     unpadded += unpadder.finalize()
     plaintext = unpadded.decode()
-    print(plaintext)
     return plaintext
 
 
@@ -70,4 +66,6 @@ message = _createMessage(filename)
 iv = os.urandom(16)
 print("The Initialisation Vector (IV) is:  " + b64encode(iv).decode())
 secret_message = _encrypt(message)
-_decrypt(secret_message)
+print(secret_message)
+deciphered = _decrypt(secret_message)
+print(deciphered)
