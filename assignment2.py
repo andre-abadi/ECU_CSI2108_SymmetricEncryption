@@ -13,60 +13,88 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 # Preamble
 print("CSI2108 Symmetric Encryption Tool\n")
+
+
 # Input passphrase
 passphrase = input("Please enter passphrase: ")
+
+# Check for some input, otherwise use a default
 if len(passphrase) == 0:
     passphrase = "CSI2108"
     print("No passphrase detected, defaulting to: " + passphrase)
-while ((sys.getsizeof(passphrase) * 8) != 256):
+
+
+# Convert to bytes and check that passphrase is 256 bits (32 bytes) long
+passphrase = passphrase.encode()
+while (sys.getsizeof(passphrase) != 32):
     passphrase = input(
-        "{} is not 256, try again: "
+        "{} bits is not 256 bits, try again: "
         .format(sys.getsizeof(passphrase) * 8))
+    passphrase = passphrase.encode()
 print("Passphrase is {} bits long".format(sys.getsizeof(passphrase) * 8))
-# while len(passphrase) == 0:
-#     passphrase = input("No passphrase detected! Please enter passphrase: ")
-print("Your passphrase is: " + passphrase)
+print("Your passphrase is: " + passphrase.decode())
+
+
 # Input filename
 filename = input("Please enter a filename to be encrypted: ")
 if len(filename) == 0:
     filename = "input.txt"
     print("No filename detecting, defaulting to: " + filename)
 print("The filename to be encrypted is: " + filename)
+# Open the file for reading
 file = open(filename, mode='r')
-input = file.read()
-print("The file was read and contained: " + input)
+message = file.read()
+print("The file was read and contained: " + message)
+
+
 # Convert message to bytes
-input = input.encode()
-print("The message as bytes is: " + b64encode(input).decode())
+message = message.encode()
+print("The message as bytes is: " + b64encode(message).decode())
+print("Message is {} bits long".format(sys.getsizeof(message) * 8))
+
+
 # Pad message
-padder = padding.PKCS7(16).padder()
-padded = padder.update(input)
-padded += padder.finalize()
-print("The padded message is: " + b64encode(padded).decode())
+isPadded = False
+if (sys.getsizeof(message)*8) % 16 != 0:
+    print("Padding")
+    padder = padding.PKCS7(16).padder()
+    padded = padder.update(message)
+    padded += padder.finalize()
+    message = padded
+    isPadded = True
+    print("The padded message is: " + b64encode(message).decode())
+    print("Padded message is {} bits long".format(sys.getsizeof(message) * 8))
+
+
 # Generate Initialisation Vector (IV)
 iv = os.urandom(16)
 print("The Initialisation Vector (IV) is:  " + b64encode(iv).decode())
-backend = default_backend()
-settings = Cipher(algorithms.AES(passphrase), modes.CBC(iv), backend=backend)
 
+# Initialise backend
+backend = default_backend()
+print("Passphrase is {} bits long".format(sys.getsizeof(passphrase) * 8))
+print("Passphrase is {} bytes long".format(sys.getsizeof(passphrase)))
+passphrase = os.urandom(32)
+print("Random is {} bits long".format(sys.getsizeof(passphrase) * 8))
+print("Random is {} bytes long".format(sys.getsizeof(passphrase)))
+settings = Cipher(algorithms.AES(passphrase), modes.CBC(iv), backend=backend)
+message = "a secret message"
+message = message.encode()
+# Create instance of encryptor and decryptor objects
 encryptor = settings.encryptor()
 decryptor = settings.decryptor()
-# Create a secret message
-message = "a secret message"
 print(message)
-# Convert message from String abstraction to literal bytes
-message = message.encode()
-# Pad the messaage to 256 bits
-
 # Do the encryption
-encrypted = encryptor.update(padded) + encryptor.finalize()
+encrypted = encryptor.update(message) + encryptor.finalize()
 print(encrypted)
 # Do the decryption
 decrypted = decryptor.update(encrypted) + decryptor.finalize()
 print(decrypted)
+
 # Unpad the decrypted message
-unpadder = padding.PKCS7(128).unpadder()
-unpadded = unpadder.update(decrypted)
-unpadded += unpadder.finalize()
-plaintext = unpadded.decode()
-print(plaintext)
+if isPadded is True:
+    unpadder = padding.PKCS7(128).unpadder()
+    unpadded = unpadder.update(decrypted)
+    unpadded += unpadder.finalize()
+    plaintext = unpadded.decode()
+    print(plaintext)
