@@ -6,6 +6,7 @@
 # Import libraries
 import os
 import sys
+import hashlib
 from base64 import b64encode
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
@@ -22,18 +23,8 @@ passphrase = input("Please enter passphrase: ")
 if len(passphrase) == 0:
     passphrase = "CSI2108"
     print("No passphrase detected, defaulting to: " + passphrase)
-
-
+key = hashlib.sha256(passphrase).digest()
 # Convert to bytes and check that passphrase is 256 bits (32 bytes) long
-passphrase = passphrase.encode()
-while (sys.getsizeof(passphrase) != 32):
-    passphrase = input(
-        "{} bits is not 256 bits, try again: "
-        .format(sys.getsizeof(passphrase) * 8))
-    passphrase = passphrase.encode()
-print("Passphrase is {} bits long".format(sys.getsizeof(passphrase) * 8))
-print("Your passphrase is: " + passphrase.decode())
-
 
 # Input filename
 filename = input("Please enter a filename to be encrypted: ")
