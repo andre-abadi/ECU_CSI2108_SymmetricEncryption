@@ -16,14 +16,17 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 print("CSI2108 Symmetric Encryption Tool\n")
 
 
+def _keyGen(passphrase):
+    if len(passphrase) == 0:
+        passphrase = "CSI2108"
+        print("No passphrase detected, defaulting to: " + passphrase)
+    key = hashlib.sha256(passphrase.encode()).digest()
+    return key
+
+
 # Input passphrase
 passphrase = input("Please enter passphrase: ")
-# Check for some input, otherwise use a default
-if len(passphrase) == 0:
-    passphrase = "CSI2108"
-    print("No passphrase detected, defaulting to: " + passphrase)
-# Generate a 256-bit key from the passphrase
-key = hashlib.sha256(passphrase.encode()).digest()
+key = _keyGen(passphrase)
 
 
 def _readFile(filename):
