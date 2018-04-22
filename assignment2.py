@@ -23,7 +23,7 @@ def _createKey(passphrase):
 def _createMessage(filename):
     if len(filename) == 0:
         filename = "input.txt"
-        print("No filename detecting, defaulting to: " + filename)
+        print("No filename detected, defaulting to: " + filename)
     file = open(filename, mode='r')
     message = file.read()
     message = message.encode()
