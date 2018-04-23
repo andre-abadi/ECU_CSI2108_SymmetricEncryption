@@ -11,42 +11,6 @@ from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 
-def _createKey():
-    pwd = input("Please enter passphrase: ")
-    if len(pwd) == 0:
-        pwd = "CSI2108"
-        print("No passphrase detected, defaulting to: " + pwd)
-    sha = hashlib.sha256(pwd.encode()).digest()
-    return sha
-
-
-def _readMsgFile():
-    fnm = input("Please enter a file to read: ")
-    if len(fnm) == 0:
-        fnm = "input.txt"
-        print("No filename detected, defaulting to: " + fnm)
-    fil = open(fnm, mode='r')
-    txt = fil.read()
-    txt = txt.encode()
-    return txt
-
-
-def _writeCrypto(enc: bytes, vec: bytes):
-    fnm = input("Please enter a filename for the encryption output: ")
-    if len(fnm) == 0:
-        fnm = "enciphered.txt"
-        print("No filename detected, defaulting to: " + fnm)
-    fil = open(fnm, mode='w')
-    enc = b64encode(enc).decode()
-    vec = b64encode(vec).decode()
-    fil.write("-----BEGIN AES256-CBC MESSAGE-----\n\n")
-    fil.write(enc)
-    fil.write("\n\n-----END AES256-CBC MESSAGE-----\n\n")
-    fil.write("-----BEGIN AES256-CBC INITIALISATION VECTOR-----\n\n")
-    fil.write(vec)
-    fil.write("\n\n-----END AES256-CBC INITIALISATION VECTOR-----\n\n")
-
-
 def _encrypt(msg: str, kee: str, vec: str):
     padder = padding.PKCS7(128).padder()
     padded = padder.update(msg)
@@ -63,7 +27,6 @@ def _decrypt(msg: str, kee: str, vec: str):
     settings = Cipher(algorithms.AES(kee), modes.CBC(vec), backend=backend)
     decryptor = settings.decryptor()
     decrypted = decryptor.update(msg) + decryptor.finalize()
-    # Unpad the decrypted message
     unpadder = padding.PKCS7(128).unpadder()
     unpadded = unpadder.update(decrypted)
     unpadded += unpadder.finalize()
@@ -71,7 +34,43 @@ def _decrypt(msg: str, kee: str, vec: str):
     return plaintext
 
 
-def _readCrypto():
+def _createKey():
+    password = input("Please enter passphrase: ")
+    if len(password) == 0:
+        password = "CSI2108"
+        print("No passphrase detected, defaulting to: " + password)
+    hashedPass = hashlib.sha256(password.encode()).digest()
+    return hashedPass
+
+
+def _readMsgFile():
+    filename = input("Please enter a file to read: ")
+    if len(filename) == 0:
+        filename = "input.txt"
+        print("No filename detected, defaulting to: " + filename)
+    file = open(filename, mode='r')
+    message = file.read()
+    message = message.encode()
+    return message
+
+
+def _writeCryptoFile(encrypted: bytes, vector: bytes):
+    fname = input("Please enter a filename for the encryption output: ")
+    if len(fname) == 0:
+        fname = "enciphered.txt"
+        print("No filename detected, defaulting to: " + fname)
+    file = open(fname, mode='w')
+    encrypted = b64encode(encrypted).decode()
+    vector = b64encode(vector).decode()
+    file.write("-----BEGIN AES256-CBC MESSAGE-----\n\n")
+    file.write(encrypted)
+    file.write("\n\n-----END AES256-CBC MESSAGE-----\n\n")
+    file.write("-----BEGIN AES256-CBC INITIALISATION VECTOR-----\n\n")
+    file.write(vector)
+    file.write("\n\n-----END AES256-CBC INITIALISATION VECTOR-----\n\n")
+
+
+def _readCryptoFile():
     fname = input("Please enter file of encrypted data to read: ")
     if len(fname) == 0:
         fname = "enciphered.txt"
@@ -90,18 +89,22 @@ def _encryptWrapper():
     message = _readMsgFile()
     iv = os.urandom(16)
     secret_message = _encrypt(message, key, iv)
-    _writeCrypto(secret_message, iv)
+    _writeCryptoFile(secret_message, iv)
+    print("Done!\n")
 
 
 def _decryptWrapper():
     key = _createKey()
-    cipherdata = _readCrypto()
+    cipherdata = _readCryptoFile()
     ciphertext = cipherdata[0]
     vector = cipherdata[1]
-    decrypted = _decrypt(ciphertext, key, vector)
-    print("\n-----BEGIN DECRYPTED MESSAGE-----\n")
-    print(decrypted)
-    print("\n-----END DECRYPTED MESSAGE------\n")
+    try:
+        decrypted = _decrypt(ciphertext, key, vector)
+        print("\n-----BEGIN DECRYPTED MESSAGE-----\n")
+        print(decrypted)
+        print("\n-----END DECRYPTED MESSAGE------\n")
+    except ValueError:
+        print("Your key was incorrect! Aborting program.\n")
 
 
 print("CSI2108 AES256-CBC SYMMETRIC ENCRYPTION TOOL")
