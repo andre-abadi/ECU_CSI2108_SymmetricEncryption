@@ -35,10 +35,13 @@ def _decrypt(msg: str, kee: str, vec: str):
 
 
 def _createKey():
+    # Ask for an input password
     password = input("Please enter passphrase: ")
+    # Use a default (for testing) if no input is received
     if len(password) == 0:
         password = "CSI2108"
         print("No passphrase detected, defaulting to: " + password)
+    # Convert the password to bytes and then SHA256 it
     hashedPass = hashlib.sha256(password.encode()).digest()
     return hashedPass
 
@@ -60,6 +63,7 @@ def _readMsgFile():
 
 def _writeCryptoFile(encrypted: bytes, vector: bytes):
     fname = input("Please enter a filename for the encryption output: ")
+    # If no input provided, use a default (for development testing)
     if len(fname) == 0:
         fname = "enciphered.txt"
         print("No filename detected, defaulting to: " + fname)
@@ -79,42 +83,62 @@ def _writeCryptoFile(encrypted: bytes, vector: bytes):
 
 
 def _readCryptoFile():
-    fname = input("Please enter file of encrypted data to read: ")
-    if len(fname) == 0:
-        fname = "enciphered.txt"
-        print("No filename detected, defaulting to: " + fname)
+    # Prompt for input for name of a file to be opened
+    filename = input("Please enter file of encrypted data to read: ")
+    # If no input provided, use a default (for development testing)
+    if len(filename) == 0:
+        filename = "enciphered.txt"
+        print("No filename detected, defaulting to: " + filename)
     try:
-        file = open(fname, mode='r')
+        file = open(filename, mode='r')
+        # Convert opened file into a list of lines, each as Strings
         lines = file.readlines()
+        # Pull out the ciphertext alawys on the 3rd line, stripping it of EOL
         encrypted = lines[2].strip()
+        # Decode it from base64 string back into bytes
         encrypted = b64decode(encrypted)
+        # Pull out the IV alawys on the 9th line, stripping it of EOL
         vector = lines[8].strip()
+        # Decode it from base64 string back into bytes
         vector = b64decode(vector)
+        # Return a tuple of the encrypted text and the IV
         return (encrypted, vector)
+    # Detect known error if the file is not found
     except FileNotFoundError:
         print("Unable to find your file to read it. Exiting.\n")
         quit()
 
 
 def _encryptWrapper():
+    # Create a key
     key = _createKey()
+    # Read the message from the message file
     message = _readMsgFile()
+    # Generate an IV
     iv = os.urandom(16)
+    # Encrypt the message using the IV and the key
     secret_message = _encrypt(message, key, iv)
+    # Write the encrypted message and IV to file
     _writeCryptoFile(secret_message, iv)
-    print("Done!\n")
+    print("Done. Exiting.\n")
 
 
 def _decryptWrapper():
+    # Create a key
     key = _createKey()
+    # Read the encrypted message and IV from the nominated file
     cipherdata = _readCryptoFile()
+    # Seperate out the returned Tuple into the encrypted message and IV
     ciphertext = cipherdata[0]
     vector = cipherdata[1]
+    # Attempt the decryption with the given values
     try:
         decrypted = _decrypt(ciphertext, key, vector)
+        # Print the decrypted message in a PGP-inspired way
         print("\n-----BEGIN DECRYPTED MESSAGE-----\n")
         print(decrypted)
         print("\n-----END DECRYPTED MESSAGE------\n")
+    # Detect known error if any of the decryption values are incorrect
     except ValueError:
         print("Your key was incorrect. Exiting.\n")
         quit()
