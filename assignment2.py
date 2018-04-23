@@ -85,13 +85,11 @@ def _readCrypto():
     return (encrypted, vector)
 
 
-# Preamble
-print("CSI2108 AES256-CBC SYMMETRIC ENCRYPTION TOOL\n")
-print("This tool will encrypt or decrypt a chosen file.\n")
+print("CSI2108 AES256-CBC SYMMETRIC ENCRYPTION TOOL")
+print("This tool will encrypt or decrypt a chosen file.")
 choice = "0"
 while (choice != "1") and (choice != "2"):
-    print("Please enter 1 for encryption or 2 for decryption:\n")
-    choice = input()
+    choice = input("Please enter 1 for encryption or 2 for decryption: ")
 if (choice == "1"):
     print
     key = _createKey()
@@ -105,4 +103,6 @@ if (choice == "2"):
     ciphertext = cipherdata[0]
     vector = cipherdata[1]
     decrypted = _decrypt(ciphertext, key, vector)
+    print("\n-----BEGIN DECRYPTED MESSAGE-----\n")
     print(decrypted)
+    print("\n-----END DECRYPTED MESSAGE------\n")
