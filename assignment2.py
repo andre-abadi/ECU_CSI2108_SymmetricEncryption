@@ -31,24 +31,20 @@ def _readMsgFile():
     return txt
 
 
-def _writeCrypto(msg: bytes, vec: bytes):
+def _writeCrypto(enc: bytes, vec: bytes):
     fnm = input("Please enter a filename for the encryption output: ")
     if len(fnm) == 0:
         fnm = "enciphered.txt"
         print("No filename detected, defaulting to: " + fnm)
     fil = open(fnm, mode='w')
-    msg = b64encode(msg).decode()
+    enc = b64encode(enc).decode()
     vec = b64encode(vec).decode()
     fil.write("-----BEGIN AES256-CBC MESSAGE-----\n\n")
-    fil.write(msg)
+    fil.write(enc)
     fil.write("\n\n-----END AES256-CBC MESSAGE-----\n\n")
     fil.write("-----BEGIN AES256-CBC INITIALISATION VECTOR-----\n\n")
     fil.write(vec)
     fil.write("\n\n-----END AES256-CBC INITIALISATION VECTOR-----\n\n")
-
-
-def _readCrypto():
-    pass
 
 
 def _encrypt(message):
@@ -75,15 +71,28 @@ def _decrypt(ciphertext):
     return plaintext
 
 
+def _readCrypto():
+    fnm = input("Please enter encrypted data to read: ")
+    if len(fnm) == 0:
+        fnm = "enciphered.txt"
+        print("No filename detected, defaulting to: " + fnm)
+    fil = open(fnm, mode='r')
+    lns = fil.readlines()
+    enc = lns[2].strip()
+    enc = enc.encode()
+    vec = lns[8].strip()
+    vec = vec.encode()
+    return (enc, vec)
+
+
 # Preamble
 print("CSI2108 Symmetric Encryption Tool\n")
-# Input passphrase
-key = _createKey()
-# Input filename
-message = _readMsgFile()
-# Generate Initialisation Vector (IV)
-iv = os.urandom(16)
-# print("The Initialisation Vector (IV) is:  " + b64encode(iv).decode())
-secret_message = _encrypt(message)
-_writeCrypto(secret_message, iv)
-deciphered = _decrypt(secret_message)
+cipherdata = _readCrypto()
+print(cipherdata[0])
+print(cipherdata[1])
+# key = _createKey()
+# message = _readMsgFile()
+# iv = os.urandom(16)
+# secret_message = _encrypt(message)
+# _writeCrypto(secret_message, iv)
+# deciphered = _decrypt(secret_message)
