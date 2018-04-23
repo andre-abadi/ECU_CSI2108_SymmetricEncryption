@@ -48,10 +48,14 @@ def _readMsgFile():
     if len(filename) == 0:
         filename = "input.txt"
         print("No filename detected, defaulting to: " + filename)
-    file = open(filename, mode='r')
-    message = file.read()
-    message = message.encode()
-    return message
+    try:
+        file = open(filename, mode='r')
+        message = file.read()
+        message = message.encode()
+        return message
+    except FileNotFoundError:
+        print("Unable to find your file. Exiting.\n")
+        quit()
 
 
 def _writeCryptoFile(encrypted: bytes, vector: bytes):
@@ -59,15 +63,19 @@ def _writeCryptoFile(encrypted: bytes, vector: bytes):
     if len(fname) == 0:
         fname = "enciphered.txt"
         print("No filename detected, defaulting to: " + fname)
-    file = open(fname, mode='w')
-    encrypted = b64encode(encrypted).decode()
-    vector = b64encode(vector).decode()
-    file.write("-----BEGIN AES256-CBC MESSAGE-----\n\n")
-    file.write(encrypted)
-    file.write("\n\n-----END AES256-CBC MESSAGE-----\n\n")
-    file.write("-----BEGIN AES256-CBC INITIALISATION VECTOR-----\n\n")
-    file.write(vector)
-    file.write("\n\n-----END AES256-CBC INITIALISATION VECTOR-----\n\n")
+    try:
+        file = open(fname, mode='w')
+        encrypted = b64encode(encrypted).decode()
+        vector = b64encode(vector).decode()
+        file.write("-----BEGIN AES256-CBC MESSAGE-----\n\n")
+        file.write(encrypted)
+        file.write("\n\n-----END AES256-CBC MESSAGE-----\n\n")
+        file.write("-----BEGIN AES256-CBC INITIALISATION VECTOR-----\n\n")
+        file.write(vector)
+        file.write("\n\n-----END AES256-CBC INITIALISATION VECTOR-----\n\n")
+    except FileNotFoundError:
+        print("Unable to find your file to write to it. Exiting.\n")
+        quit()
 
 
 def _readCryptoFile():
@@ -75,13 +83,17 @@ def _readCryptoFile():
     if len(fname) == 0:
         fname = "enciphered.txt"
         print("No filename detected, defaulting to: " + fname)
-    file = open(fname, mode='r')
-    lines = file.readlines()
-    encrypted = lines[2].strip()
-    encrypted = b64decode(encrypted)
-    vector = lines[8].strip()
-    vector = b64decode(vector)
-    return (encrypted, vector)
+    try:
+        file = open(fname, mode='r')
+        lines = file.readlines()
+        encrypted = lines[2].strip()
+        encrypted = b64decode(encrypted)
+        vector = lines[8].strip()
+        vector = b64decode(vector)
+        return (encrypted, vector)
+    except FileNotFoundError:
+        print("Unable to find your file to read it. Exiting.\n")
+        quit()
 
 
 def _encryptWrapper():
@@ -104,7 +116,8 @@ def _decryptWrapper():
         print(decrypted)
         print("\n-----END DECRYPTED MESSAGE------\n")
     except ValueError:
-        print("Your key was incorrect! Aborting program.\n")
+        print("Your key was incorrect. Exiting.\n")
+        quit()
 
 
 print("CSI2108 AES256-CBC SYMMETRIC ENCRYPTION TOOL")
