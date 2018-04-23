@@ -5,32 +5,36 @@
 import os
 import hashlib
 from base64 import b64encode
+from base64 import b64decode
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 
-def _createKey(pwd: str):
+def _createKey():
+    pwd = input("Please enter passphrase: ")
     if len(pwd) == 0:
         pwd = "CSI2108"
         print("No passphrase detected, defaulting to: " + pwd)
-    key = hashlib.sha256(pwd.encode()).digest()
-    return key
+    sha = hashlib.sha256(pwd.encode()).digest()
+    return sha
 
 
-def _readFile(fnm: str):
+def _readMsgFile():
+    fnm = input("Please enter a file to read: ")
     if len(fnm) == 0:
         fnm = "input.txt"
         print("No filename detected, defaulting to: " + fnm)
     fil = open(fnm, mode='r')
-    msg = fil.read()
-    msg = msg.encode()
-    return msg
+    txt = fil.read()
+    txt = txt.encode()
+    return txt
 
 
-def _writeFile(fnm: str, msg: bytes, vec: bytes):
+def _writeCrypto(msg: bytes, vec: bytes):
+    fnm = input("Please enter a filename for the encryption output: ")
     if len(fnm) == 0:
-        fnm = "output.txt"
+        fnm = "enciphered.txt"
         print("No filename detected, defaulting to: " + fnm)
     fil = open(fnm, mode='w')
     msg = b64encode(msg).decode()
@@ -41,6 +45,10 @@ def _writeFile(fnm: str, msg: bytes, vec: bytes):
     fil.write("-----BEGIN AES256-CBC INITIALISATION VECTOR-----\n\n")
     fil.write(vec)
     fil.write("\n\n-----END AES256-CBC INITIALISATION VECTOR-----\n\n")
+
+
+def _readCrypto():
+    pass
 
 
 def _encrypt(message):
@@ -70,15 +78,12 @@ def _decrypt(ciphertext):
 # Preamble
 print("CSI2108 Symmetric Encryption Tool\n")
 # Input passphrase
-passphrase = input("Please enter passphrase: ")
-key = _createKey(passphrase)
+key = _createKey()
 # Input filename
-filename = input("Please enter a filename to be encrypted: ")
-message = _readFile(filename)
+message = _readMsgFile()
 # Generate Initialisation Vector (IV)
 iv = os.urandom(16)
 # print("The Initialisation Vector (IV) is:  " + b64encode(iv).decode())
 secret_message = _encrypt(message)
-outFile = input("Please enter a filename for the encryption output: ")
-_writeFile(outFile, secret_message, iv)
+_writeCrypto(secret_message, iv)
 deciphered = _decrypt(secret_message)
