@@ -85,19 +85,15 @@ def _readCrypto():
     return (encrypted, vector)
 
 
-print("CSI2108 AES256-CBC SYMMETRIC ENCRYPTION TOOL")
-print("This tool will encrypt or decrypt a chosen file.")
-choice = "0"
-while (choice != "1") and (choice != "2"):
-    choice = input("Please enter 1 for encryption or 2 for decryption: ")
-if (choice == "1"):
-    print
+def _encryptWrapper():
     key = _createKey()
     message = _readMsgFile()
     iv = os.urandom(16)
     secret_message = _encrypt(message, key, iv)
     _writeCrypto(secret_message, iv)
-if (choice == "2"):
+
+
+def _decryptWrapper():
     key = _createKey()
     cipherdata = _readCrypto()
     ciphertext = cipherdata[0]
@@ -106,3 +102,14 @@ if (choice == "2"):
     print("\n-----BEGIN DECRYPTED MESSAGE-----\n")
     print(decrypted)
     print("\n-----END DECRYPTED MESSAGE------\n")
+
+
+print("CSI2108 AES256-CBC SYMMETRIC ENCRYPTION TOOL")
+print("This tool will encrypt or decrypt a chosen file.")
+choice = "0"
+while (choice != "1") and (choice != "2"):
+    choice = input("Please enter 1 for encryption or 2 for decryption: ")
+if (choice == "1"):
+    _encryptWrapper()
+if (choice == "2"):
+    _decryptWrapper()
