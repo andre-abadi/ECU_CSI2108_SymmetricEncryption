@@ -7,36 +7,12 @@ import hashlib
 from base64 import b64encode
 from base64 import b64decode
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-
-
-def _encrypt(msg: str, kee: str, vec: str):
-    padder = padding.PKCS7(128).padder()
-    padded = padder.update(msg)
-    padded += padder.finalize()
-    backend = default_backend()
-    cipher = Cipher(algorithms.AES(kee), modes.CBC(vec), backend=backend)
-    encryptor = cipher.encryptor()
-    encrypted = encryptor.update(padded) + encryptor.finalize()
-    return encrypted
-
-
-def _decrypt(msg: str, kee: str, vec: str):
-    backend = default_backend()
-    settings = Cipher(algorithms.AES(kee), modes.CBC(vec), backend=backend)
-    decryptor = settings.decryptor()
-    decrypted = decryptor.update(msg) + decryptor.finalize()
-    unpadder = padding.PKCS7(128).unpadder()
-    unpadded = unpadder.update(decrypted)
-    unpadded += unpadder.finalize()
-    plaintext = unpadded.decode()
-    return plaintext
 
 
 def _createKey():
     # Ask for an input password
-    password = input("Please enter passphrase: ")
+    password = input("Please enter a passphrase: ")
     # Use a default (for testing) if no input is received
     if len(password) == 0:
         password = "CSI2108"
@@ -57,11 +33,43 @@ def _readMsgFile():
         message = message.encode()
         return message
     except FileNotFoundError:
-        print("Unable to find your file. Exiting.\n")
+        input("Unable to find your file. Press ENTER to exit.")
         quit()
 
 
-def _writeCryptoFile(encrypted: bytes, vector: bytes):
+def _padMessage(msg: bytes):
+    # Start the padded message with the message
+    paddedMsg = bytes(msg)
+    print("Message length is: " + str(len(msg)))
+    modulo = (len(msg)) % 16
+    print("Remainder is: " + str(modulo))
+    # Work out how many bytes short of a multiple of 16 are needed filled
+    padlength = 16 - modulo
+    print("Pad length is: " + str(padlength))
+    # Convert the magic number to a string, then bytes
+    padChar = str(padlength)
+    padBytes = bytes([padlength])
+    # Start a counter
+    count = 0
+    while (count < padlength):
+        paddedMsg += padBytes
+        count += 1
+    return (paddedMsg, padChar)
+
+
+def _encrypt(msg: str, kee: str, vec: str):
+    padded = _padMessage(msg)
+    paddedMessage = padded[0]
+    pad = padded[1]
+    backend = default_backend()
+    cipher = Cipher(algorithms.AES(kee), modes.CBC(vec), backend=backend)
+    encryptor = cipher.encryptor()
+    encrypted = encryptor.update(paddedMessage) + encryptor.finalize()
+    print(b64encode(encrypted).decode())
+    return (encrypted, pad)
+
+
+def _writeCryptoFile(encrypted: bytes, vector: bytes, padchar: int):
     fname = input("Please enter a filename for the encryption output: ")
     # If no input provided, use a default (for development testing)
     if len(fname) == 0:
@@ -70,16 +78,37 @@ def _writeCryptoFile(encrypted: bytes, vector: bytes):
     try:
         file = open(fname, mode='w')
         encrypted = b64encode(encrypted).decode()
+        print(encrypted)
         vector = b64encode(vector).decode()
         file.write("-----BEGIN AES256-CBC MESSAGE-----\n\n")
         file.write(encrypted)
+        print(encrypted)
         file.write("\n\n-----END AES256-CBC MESSAGE-----\n\n")
         file.write("-----BEGIN AES256-CBC INITIALISATION VECTOR-----\n\n")
         file.write(vector)
         file.write("\n\n-----END AES256-CBC INITIALISATION VECTOR-----\n\n")
+        file.write("-----BEGIN PADDING CHARACTER-----\n\n")
+        file.write(padchar)
+        file.write("\n\n-----END AES256-CBC INITIALISATION VECTOR-----\n\n")
     except FileNotFoundError:
-        print("Unable to find your file to write to it. Exiting.\n")
+        input("Unable to find file. Press ENTER to exit.")
         quit()
+
+
+def _encryptWrapper():
+    # Create a key
+    key = _createKey()
+    # Read the message from the message file
+    message = _readMsgFile()
+    # Generate an IV
+    iv = os.urandom(16)
+    # Encrypt the message using the IV and the key
+    enciphered = _encrypt(message, key, iv)
+    ciphertext = enciphered[0]
+    padCharacter = enciphered[1]
+    # Write the encrypted message and IV to file
+    _writeCryptoFile(ciphertext, iv, padCharacter)
+    input("Done. Press ENTER to exit.")
 
 
 def _readCryptoFile():
@@ -95,8 +124,11 @@ def _readCryptoFile():
         lines = file.readlines()
         # Pull out the ciphertext alawys on the 3rd line, stripping it of EOL
         encrypted = lines[2].strip()
+        print(encrypted)
         # Decode it from base64 string back into bytes
         encrypted = b64decode(encrypted)
+        print(encrypted)
+        # print(encrypted)
         # Pull out the IV alawys on the 9th line, stripping it of EOL
         vector = lines[8].strip()
         # Decode it from base64 string back into bytes
@@ -105,22 +137,25 @@ def _readCryptoFile():
         return (encrypted, vector)
     # Detect known error if the file is not found
     except FileNotFoundError:
-        print("Unable to find your file to read it. Exiting.\n")
+        input("Unable to find that file. Press ENTER to exit.")
         quit()
 
 
-def _encryptWrapper():
-    # Create a key
-    key = _createKey()
-    # Read the message from the message file
-    message = _readMsgFile()
-    # Generate an IV
-    iv = os.urandom(16)
-    # Encrypt the message using the IV and the key
-    secret_message = _encrypt(message, key, iv)
-    # Write the encrypted message and IV to file
-    _writeCryptoFile(secret_message, iv)
-    print("Done. Exiting.\n")
+def _unPadMessage(msg: str):
+    padlength = msg[-1]
+    padlength = int(padlength)
+    unpaddedMsg = msg[:-padlength]
+    return unpaddedMsg
+
+
+def _decrypt(msg: str, kee: str, vec: str):
+    backend = default_backend()
+    settings = Cipher(algorithms.AES(kee), modes.CBC(vec), backend=backend)
+    decryptor = settings.decryptor()
+    decrypted = decryptor.update(msg) + decryptor.finalize()
+    plaintext = _unPadMessage(decrypted)
+    plaintext = plaintext.decode()
+    return plaintext
 
 
 def _decryptWrapper():
@@ -140,15 +175,14 @@ def _decryptWrapper():
         print("\n-----END DECRYPTED MESSAGE------\n")
     # Detect known error if any of the decryption values are incorrect
     except ValueError:
-        print("Your key was incorrect. Exiting.\n")
+        input("Your key was incorrect. Press ENTER to exit.")
         quit()
 
 
 print("CSI2108 AES256-CBC SYMMETRIC ENCRYPTION TOOL")
-print("This tool will encrypt or decrypt a chosen file.")
 choice = "0"
 while (choice != "1") and (choice != "2"):
-    choice = input("Please enter 1 for encryption or 2 for decryption: ")
+    choice = input("Please enter 1 to encrypt or 2 to decrypt a file: ")
 if (choice == "1"):
     _encryptWrapper()
 if (choice == "2"):

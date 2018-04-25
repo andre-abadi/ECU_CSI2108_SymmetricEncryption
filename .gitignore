@@ -99,9 +99,7 @@ ENV/
 
 # mypy
 .mypy_cache/
-CSI2108 - Assignment 2 Instructions.doc
-CSI2108 - Assignment 2 Instructions.pdf
-input*.txt
-output*.txt
-enciphered*.txt
-badfile*.txt
+*.txt
+*.docx
+*.doc
+*.pdf
