@@ -13,11 +13,6 @@ def _createKey():
     # Ask for an input password
     password = input("Please enter a passphrase: ")
     password = password.strip()
-    # Use a default (for testing) if no input is received
-    if len(password) == 0:
-        password = "CSI2108-CryptographicConcepts-18"
-        print("No passphrase detected, defaulting to: " + password)
-    # Convert the password to bytes and then SHA256 it
     passbytes = password.encode()
     while (len(passbytes) != 32):
         passbits = str(len(passbytes.strip()) * 8)
@@ -30,9 +25,6 @@ def _createKey():
 
 def _readMsgFile():
     filename = input("Please enter a file to read: ")
-    if len(filename) == 0:
-        filename = "input.txt"
-        print("No filename detected, defaulting to: " + filename)
     try:
         file = open(filename, mode='r')
         message = file.read()
@@ -76,9 +68,6 @@ def _encrypt(msg: str, kee: str, vec: str):
 def _writeCryptoFile(encrypted: bytes, vector: bytes, padchar: int):
     fname = input("Please enter a filename for the encryption output: ")
     # If no input provided, use a default (for development testing)
-    if len(fname) == 0:
-        fname = "enciphered.txt"
-        print("No filename detected, defaulting to: " + fname)
     try:
         file = open(fname, mode='w')
         encrypted = b64encode(encrypted).decode()
@@ -117,9 +106,6 @@ def _readCryptoFile():
     # Prompt for input for name of a file to be opened
     filename = input("Please enter file of encrypted data to read: ")
     # If no input provided, use a default (for development testing)
-    if len(filename) == 0:
-        filename = "enciphered.txt"
-        print("No filename detected, defaulting to: " + filename)
     try:
         file = open(filename, mode='r')
         # Convert opened file into a list of lines, each as Strings
