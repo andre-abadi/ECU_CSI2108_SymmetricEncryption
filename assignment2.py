@@ -24,15 +24,17 @@ def _createKey():
 
 
 def _readMsgFile():
-    filename = input("Please enter a file to read: ")
-    try:
-        file = open(filename, mode='r')
-        message = file.read()
-        message = message.encode()
-        return message
-    except FileNotFoundError:
-        input("Unable to find your file. Press ENTER to exit.")
-        quit()
+    done = False
+    while not done:
+        try:
+            filename = input("Please enter a file to read: ")
+            file = open(filename, mode='r')
+            message = file.read()
+            message = message.encode()
+            return message
+            done = True
+        except FileNotFoundError:
+            print("Unable to find your file. Try Again.")
 
 
 def _padMessage(msg: bytes):
