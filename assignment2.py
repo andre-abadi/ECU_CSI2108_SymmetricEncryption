@@ -3,7 +3,6 @@
 
 # Import libraries
 import os
-import hashlib
 from base64 import b64encode
 from base64 import b64decode
 from cryptography.hazmat.backends import default_backend
@@ -13,13 +12,20 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 def _createKey():
     # Ask for an input password
     password = input("Please enter a passphrase: ")
+    password = password.strip()
     # Use a default (for testing) if no input is received
     if len(password) == 0:
-        password = "CSI2108"
+        password = "CSI2108-CryptographicConcepts-18"
         print("No passphrase detected, defaulting to: " + password)
     # Convert the password to bytes and then SHA256 it
-    hashedPass = hashlib.sha256(password.encode()).digest()
-    return hashedPass
+    passbytes = password.encode()
+    while (len(passbytes) != 32):
+        passbits = str(len(passbytes.strip()) * 8)
+        print("Password was " + passbits + "-bits and should be 256-bits.")
+        password = input("Please enter a passphrase: ")
+        password = password.strip()
+        passbytes = password.encode()
+    return passbytes
 
 
 def _readMsgFile():
