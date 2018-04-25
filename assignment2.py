@@ -40,12 +40,9 @@ def _readMsgFile():
 def _padMessage(msg: bytes):
     # Start the padded message with the message
     paddedMsg = bytes(msg)
-    print("Message length is: " + str(len(msg)))
     modulo = (len(msg)) % 16
-    print("Remainder is: " + str(modulo))
     # Work out how many bytes short of a multiple of 16 are needed filled
     padlength = 16 - modulo
-    print("Pad length is: " + str(padlength))
     # Convert the magic number to a string, then bytes
     padChar = str(padlength)
     padBytes = bytes([padlength])
@@ -58,14 +55,15 @@ def _padMessage(msg: bytes):
 
 
 def _encrypt(msg: str, kee: str, vec: str):
+    # call the unpadding function
     padded = _padMessage(msg)
+    # seperate out variables from above returned tuple
     paddedMessage = padded[0]
     pad = padded[1]
     backend = default_backend()
     cipher = Cipher(algorithms.AES(kee), modes.CBC(vec), backend=backend)
     encryptor = cipher.encryptor()
     encrypted = encryptor.update(paddedMessage) + encryptor.finalize()
-    print(b64encode(encrypted).decode())
     return (encrypted, pad)
 
 
@@ -78,11 +76,9 @@ def _writeCryptoFile(encrypted: bytes, vector: bytes, padchar: int):
     try:
         file = open(fname, mode='w')
         encrypted = b64encode(encrypted).decode()
-        print(encrypted)
         vector = b64encode(vector).decode()
         file.write("-----BEGIN AES256-CBC MESSAGE-----\n\n")
         file.write(encrypted)
-        print(encrypted)
         file.write("\n\n-----END AES256-CBC MESSAGE-----\n\n")
         file.write("-----BEGIN AES256-CBC INITIALISATION VECTOR-----\n\n")
         file.write(vector)
@@ -124,10 +120,8 @@ def _readCryptoFile():
         lines = file.readlines()
         # Pull out the ciphertext alawys on the 3rd line, stripping it of EOL
         encrypted = lines[2].strip()
-        print(encrypted)
         # Decode it from base64 string back into bytes
         encrypted = b64decode(encrypted)
-        print(encrypted)
         # print(encrypted)
         # Pull out the IV alawys on the 9th line, stripping it of EOL
         vector = lines[8].strip()
@@ -142,8 +136,11 @@ def _readCryptoFile():
 
 
 def _unPadMessage(msg: str):
+    # get the last character and use it as the amount to unpad
     padlength = msg[-1]
+    # Convert this into a useable integer
     padlength = int(padlength)
+    # Reduce the length of the message by the pad length
     unpaddedMsg = msg[:-padlength]
     return unpaddedMsg
 
