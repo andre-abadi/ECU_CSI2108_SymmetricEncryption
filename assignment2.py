@@ -97,6 +97,7 @@ def _writeCryptoFile(encrypted: bytes, vector: bytes, padchar: int):
             file.write(padchar)
             file.write(
                 "\n\n-----END AES256-CBC INITIALISATION VECTOR-----\n\n")
+            done = True
         except FileNotFoundError:
             print("Unable to open \"" + fname + "\". Please try again.")
 
@@ -190,6 +191,7 @@ def _decryptWrapper():
         except ValueError:
             keyStr = key.decode()
             print("Key \"" + keyStr + "\" is incorrect. Please try again.")
+    input("Done. Press ENTER to exit.")
 
 
 try:
@@ -201,6 +203,6 @@ try:
         _encryptWrapper()
     if (choice == "2"):
         _decryptWrapper()
-# Catch keyboard interrupts and close cleanl rather than crashing
 except KeyboardInterrupt:
+    # Catch keyboard interrupts and close cleanl rather than crashing
     quit()
