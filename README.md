@@ -2,8 +2,7 @@
 Interactive command-line Python encryption program using AES 256-bit with CBC
 
 ## Documentation
-This is a support document providing documentation and instructions for the author’s submission to this assessment. The assessment task was to create a program that, implementing cryptography.io, encrypted a user-defined file using the AES algorithm in CBC mode with a 256-bit key. (Baig, 2018)
-Below is a summary of each function of the program created by the author (the program, this program). They are in order of usage in the encryption and decryption processes respectively. These summaries are high-level and explain what each function does in human readable terms, as a supplement to reading the source code.
+This is a support document providing documentation and instructions for the author’s submission to this assessment. The assessment task was to create a program that, implementing cryptography.io, encrypted a user-defined file using the AES algorithm in CBC mode with a 256-bit key. Below is a summary of each function of the program created by the author (the program, this program). They are in order of usage in the encryption and decryption processes respectively. These summaries are high-level and explain what each function does in human readable terms, as a supplement to reading the source code.
 
 ## Requirements
 - Python 3+
